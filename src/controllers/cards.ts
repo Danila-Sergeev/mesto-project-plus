@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import Card from '../models/card';
 import {
   STATUS_SUCCESS,
@@ -33,7 +33,7 @@ export const createCard = async (
 ) => {
   try {
     const { name, link } = req.body;
-    const owner = req.user?._id;
+    const owner = (req.user as { _id: string | ObjectId })._id;
     const newCard = await Card.create({ name, link, owner });
     return res.status(STATUS_CREATED).send(newCard);
   } catch (error) {
@@ -62,7 +62,7 @@ export const deleteCard = async (
         .send({ message: CARD_NOT_FOUND_MESSAGE });
     }
 
-    const userId = req.user?._id;
+    const userId = (req.user as { _id: string | ObjectId })._id;
 
     if (!userId || card.owner.toString() !== userId) {
       return res
