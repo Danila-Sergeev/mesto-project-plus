@@ -1,5 +1,6 @@
 import mongoose, { ObjectId } from 'mongoose';
 import { NextFunction, Request, Response } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import { UserData, UpdateUserData } from '../utils/types';
 import User from '../models/user';
 import {
@@ -17,7 +18,7 @@ const updateUser = async (
 });
 // eslint-disable-next-line no-unused-vars
 const userUpdate = (dataExtractor: (req: Request) => UserData) => async (
-  req: Request,
+  req: Request & { user?: JwtPayload | string },
   res: Response,
   next: NextFunction,
 ) => {

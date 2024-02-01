@@ -1,10 +1,14 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 import { AUTHORIZATION_NEEDED_MESSAGE } from '../utils/consts';
 import { jwtSecret } from '../controllers/users';
 import UnauthorizedError from '../errors/unauthorizedError';
 
-const AuthorizedUser = (req: Request, res: Response, next: NextFunction) => {
+const AuthorizedUser = (
+  req: Request & { user?: JwtPayload | string },
+  res: Response,
+  next: NextFunction,
+) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {

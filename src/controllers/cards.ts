@@ -61,7 +61,7 @@ export const deleteCard = async (
       throw new NotFoundError(CARD_NOT_FOUND_MESSAGE);
     }
 
-    const userId = (req.user as { _id: string | ObjectId })._id;
+    const userId = (req.user as { _id?: string | ObjectId })._id;
 
     if (card.owner.toString() !== userId) {
       throw new ForbiddenError(STATUS_FORBIDDEN_MESSAGE);
