@@ -1,8 +1,13 @@
+import { STATUS_NOT_FOUND } from '../utils/consts';
+
 class NotFoundError extends Error {
+  statusCode: number;
+
   constructor(message?: string) {
-    super(message); // передаем сообщение в базовый класс
-    this.name = 'NotFoundError'; // задаем имя ошибки
-    // eslint-disable-next-line no-console
+    super(message);
+    this.name = 'NotFoundError';
+    this.statusCode = STATUS_NOT_FOUND;
+
     // правильно устанавливаем прототип (необходимо для `instanceof` в TypeScript)
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }

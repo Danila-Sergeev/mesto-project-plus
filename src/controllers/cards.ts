@@ -1,17 +1,19 @@
 import { NextFunction, Request, Response } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import mongoose, { ObjectId } from 'mongoose';
 import Card from '../models/card';
 import {
   STATUS_SUCCESS,
   STATUS_CREATED,
-  STATUS_NOT_FOUND,
-  STATUS_BAD_REQUEST,
   CARD_NOT_FOUND_MESSAGE,
-  INVALID_DATA_MESSAGE,
   VALIDATION_ERROR_MESSAGE,
   CARD_DELITION_SUCCESS_MESSAGE,
+  STATUS_FORBIDDEN_MESSAGE,
 } from '../utils/consts';
 import modifyCardLikes from '../updates/cardUpdate';
+import ValidationError from '../errors/validationError';
+import NotFoundError from '../errors/notFoundError';
+import ForbiddenError from '../errors/forbiddenError';
 
 export const getCards = async (
   req: Request,
@@ -27,7 +29,7 @@ export const getCards = async (
 };
 
 export const createCard = async (
-  req: Request,
+  req: Request & { user?: JwtPayload | string },
   res: Response,
   next: NextFunction,
 ) => {
@@ -38,16 +40,15 @@ export const createCard = async (
     return res.status(STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .send({ message: VALIDATION_ERROR_MESSAGE });
+      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE, error);
+      return next(validationError);
     }
     return next(error);
   }
 };
 
 export const deleteCard = async (
-  req: Request,
+  req: Request & { user?: JwtPayload | string },
   res: Response,
   next: NextFunction,
 ) => {
@@ -57,24 +58,18 @@ export const deleteCard = async (
     const card = await Card.findById(id);
 
     if (!card) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .send({ message: CARD_NOT_FOUND_MESSAGE });
+      throw new NotFoundError(CARD_NOT_FOUND_MESSAGE);
     }
 
     const userId = (req.user as { _id: string | ObjectId })._id;
 
-    if (!userId || card.owner.toString() !== userId) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .send({ message: INVALID_DATA_MESSAGE });
+    if (card.owner.toString() !== userId) {
+      throw new ForbiddenError(STATUS_FORBIDDEN_MESSAGE);
     }
 
-    await Card.deleteOne({ id: card._id });
+    await Card.deleteOne({ _id: card._id });
 
-    return res
-      .status(STATUS_SUCCESS)
-      .send({ message: CARD_DELITION_SUCCESS_MESSAGE });
+    return res.status(STATUS_SUCCESS).send({ message: CARD_DELITION_SUCCESS_MESSAGE });
   } catch (error) {
     return next(error);
   }

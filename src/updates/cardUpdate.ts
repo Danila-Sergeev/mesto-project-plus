@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ObjectId } from 'mongoose';
+import { JwtPayload } from 'jsonwebtoken';
 import Card from '../models/card';
 import NotFoundError from '../errors/notFoundError';
 import {
@@ -7,7 +8,11 @@ import {
   CARD_NOT_FOUND_MESSAGE,
 } from '../utils/consts';
 
-const modifyCardLikes = (operation: '$addToSet' | '$pull') => async (req: Request, res: Response, next: NextFunction) => {
+const modifyCardLikes = (operation: '$addToSet' | '$pull') => async (
+  req: Request & { user?: JwtPayload | string },
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = req.params;
     const userId = (req.user as { _id: string | ObjectId })._id;

@@ -1,15 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
-import { STATUS_UNAUTHORIZED, AUTHORIZATION_NEEDED_MESSAGE } from '../utils/consts';
+import { AUTHORIZATION_NEEDED_MESSAGE } from '../utils/consts';
 import { jwtSecret } from '../controllers/users';
+import UnauthorizedError from '../errors/unauthorizedError';
 
 const AuthorizedUser = (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res
-      .status(STATUS_UNAUTHORIZED)
-      .send({ message: AUTHORIZATION_NEEDED_MESSAGE });
+    throw new UnauthorizedError(AUTHORIZATION_NEEDED_MESSAGE);
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -17,8 +16,8 @@ const AuthorizedUser = (req: Request, res: Response, next: NextFunction) => {
     const payload = jwt.verify(token, jwtSecret);
     req.user = payload;
     return next();
-  } catch {
-    return res.status(STATUS_UNAUTHORIZED).send({ message: AUTHORIZATION_NEEDED_MESSAGE });
+  } catch (err) {
+    return next(new UnauthorizedError(AUTHORIZATION_NEEDED_MESSAGE));
   }
 };
 

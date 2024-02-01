@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose, { ObjectId } from 'mongoose';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import {
   STATUS_CREATED,
   STATUS_SUCCESS,
@@ -36,7 +36,9 @@ export const getUserById = UserReturnDecorator(async (req: Request) => {
   return User.findById(id);
 });
 
-export const getAuthUser = UserReturnDecorator(async (req: Request) => {
+export const getAuthUser = UserReturnDecorator(async (
+  req: Request & { user?: JwtPayload | string },
+) => {
   const userId = (req.user as { _id: string | ObjectId })._id;
   return User.findById(userId);
 });
