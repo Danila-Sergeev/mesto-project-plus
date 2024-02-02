@@ -46,7 +46,7 @@ export const signInValidator = celebrate({
 
 export const userIdValidator = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().length(24).hex().required(),
+    id: Joi.string().length(24).hex().required(),
   }),
 });
 
@@ -72,6 +72,6 @@ export const createCardValidator = celebrate({
 
 export const cardIdValidator = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().length(24).hex().required(),
+    id: Joi.string().length(24).hex().required(),
   }),
 });

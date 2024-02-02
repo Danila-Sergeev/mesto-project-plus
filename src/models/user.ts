@@ -1,9 +1,19 @@
-import mongoose from 'mongoose';
-import { DEFAULT_ABOUT_VALUE, DEFAULT_AVATAR_LINK, DEFAULT_USER_NAME } from '../utils/consts';
+import mongoose, { Document, Model } from 'mongoose';
+import bcrypt from 'bcrypt';
+import {
+  DEFAULT_ABOUT_VALUE, DEFAULT_AVATAR_LINK,
+  DEFAULT_USER_NAME, WRONG_EMAIL_PASSWORD_MESSAGE,
+} from '../utils/consts';
 import { IUser } from '../utils/types';
 import { emailValidationOptions, urlValidationOptions } from '../utils/validator';
+import UnauthorizedError from '../errors/unauthorizedError';
 
-const UserSchema = new mongoose.Schema<IUser>(
+interface IUserModel extends Model<IUser> {
+  // eslint-disable-next-line no-unused-vars
+  findUserByCredentials: (email: string, password: string) => Promise<Document<unknown, any, IUser>>
+}
+
+const UserSchema = new mongoose.Schema<IUser, IUserModel>(
   {
     name: {
       type: String,
@@ -39,4 +49,21 @@ const UserSchema = new mongoose.Schema<IUser>(
   },
   { versionKey: false },
 );
-export default mongoose.model<IUser>('user', UserSchema);
+
+UserSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new UnauthorizedError(WRONG_EMAIL_PASSWORD_MESSAGE));
+      }
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new UnauthorizedError(WRONG_EMAIL_PASSWORD_MESSAGE));
+          }
+          return user;
+        });
+    });
+});
+
+export default mongoose.model<IUser, IUserModel>('user', UserSchema);
