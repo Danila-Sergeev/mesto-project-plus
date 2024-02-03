@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { NextFunction, Request, Response } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import NotFoundError from '../errors/notFoundError';
 import ValidationError from '../errors/validationError';
 import { UserReturnType } from '../utils/types';
@@ -11,8 +12,8 @@ import {
 
 const UserReturnDecorator = (
   // eslint-disable-next-line no-unused-vars
-  returnLogic: (req: Request) => Promise<UserReturnType>,
-) => async (req: Request, res: Response, next: NextFunction) => {
+  returnLogic: (req: Request & { user?: JwtPayload | string }) => Promise<UserReturnType>,
+) => async (req: Request & { user?: JwtPayload | string }, res: Response, next: NextFunction) => {
   try {
     const user = await returnLogic(req);
     if (!user) throw new NotFoundError(USER_NOT_FOUND_MESSAGE);

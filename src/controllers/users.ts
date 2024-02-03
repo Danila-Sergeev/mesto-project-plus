@@ -37,7 +37,7 @@ export const getUserById = UserReturnDecorator(async (req: Request) => {
 export const getAuthUser = UserReturnDecorator(async (
   req: Request & { user?: JwtPayload| string },
 ) => {
-  const userId = (req.user as { _id: string | ObjectId })?._id;
+  const userId = await (req.user as { _id: string | ObjectId })._id;
   return User.findById(userId);
 });
 
