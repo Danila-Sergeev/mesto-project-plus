@@ -24,12 +24,12 @@ const userUpdate = (dataExtractor: (req: Request) => UserData) => async (
 ) => {
   try {
     const data = dataExtractor(req);
-    const userId = await (req.user as { _id: string | ObjectId })._id;
+    const userId = (req.user as { _id: string | ObjectId })._id;
     const updatedUser = await updateUser(userId, data);
     return res.status(STATUS_SUCCESS).send(updatedUser);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE, error);
+      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE);
       return next(validationError);
     }
     return next(error);

@@ -20,10 +20,10 @@ const UserReturnDecorator = (
     return res.status(STATUS_SUCCESS).send(user);
   } catch (error) {
     if (error instanceof Error && error.name === 'NotFoundError') {
-      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+      return next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
     }
     if (error instanceof mongoose.Error.CastError) {
-      const validationError = new ValidationError(INVALID_DATA_MESSAGE, error);
+      const validationError = new ValidationError(INVALID_DATA_MESSAGE);
       return next(validationError);
     }
     return next(error);

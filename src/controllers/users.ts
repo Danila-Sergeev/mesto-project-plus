@@ -37,7 +37,7 @@ export const getUserById = UserReturnDecorator(async (req: Request) => {
 export const getAuthUser = UserReturnDecorator(async (
   req: Request & { user?: JwtPayload| string },
 ) => {
-  const userId = await (req.user as { _id: string | ObjectId })._id;
+  const userId = (req.user as { _id: string | ObjectId })._id;
   return User.findById(userId);
 });
 
@@ -47,12 +47,6 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
       name, about, avatar, email, password,
     } = req.body;
 
-    // можно и без этой проверки, но мне тогда нужно переделать везде выброс ошибок
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new UserExistsError(USER_EXISTS_MESSAGE);
-    }
-
     const hash = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
@@ -60,9 +54,11 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     });
 
     return res.status(STATUS_CREATED).send(newUser);
-  } catch (error) {
-    if (error instanceof mongoose.Error.ValidationError) {
-      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE, error);
+  } catch (error : any) {
+    if (error.code === 11000) {
+      next(new UserExistsError(USER_EXISTS_MESSAGE));
+    } else if (error instanceof mongoose.Error.ValidationError) {
+      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE);
       return next(validationError);
     }
     return next(error);

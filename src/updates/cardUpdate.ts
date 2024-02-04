@@ -6,7 +6,9 @@ import NotFoundError from '../errors/notFoundError';
 import {
   STATUS_SUCCESS,
   CARD_NOT_FOUND_MESSAGE,
+  VALIDATION_ERROR_MESSAGE,
 } from '../utils/consts';
+import ValidationError from '../errors/validationError';
 
 const modifyCardLikes = (operation: '$addToSet' | '$pull') => async (
   req: Request & { user?: JwtPayload | string },
@@ -24,14 +26,14 @@ const modifyCardLikes = (operation: '$addToSet' | '$pull') => async (
     );
 
     if (!updatedCard) {
-      throw new NotFoundError(CARD_NOT_FOUND_MESSAGE);
+      next(new NotFoundError(CARD_NOT_FOUND_MESSAGE));
     }
 
     res.status(STATUS_SUCCESS).send(updatedCard);
   } catch (error : any) {
     if (error.name === 'CastError') {
-      res.status(400).send('Недопустимый ID карточки');
-      return;
+      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE);
+      next(validationError);
     }
     next(error);
   }

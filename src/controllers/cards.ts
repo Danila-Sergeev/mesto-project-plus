@@ -15,17 +15,10 @@ import ValidationError from '../errors/validationError';
 import NotFoundError from '../errors/notFoundError';
 import ForbiddenError from '../errors/forbiddenError';
 
-export const getCards = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const cards = await Card.find({}).populate(['owner', 'likes']);
-    return res.status(STATUS_SUCCESS).send(cards);
-  } catch (error) {
-    return next(error);
-  }
+export const getCards = (req: Request, res: Response, next: NextFunction) => {
+  Card.find({})
+    .then((cards) => res.send(cards))
+    .catch(next);
 };
 
 export const createCard = async (
@@ -40,7 +33,7 @@ export const createCard = async (
     return res.status(STATUS_CREATED).send(newCard);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE, error);
+      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE);
       return next(validationError);
     }
     return next(error);
@@ -70,8 +63,12 @@ export const deleteCard = async (
     await Card.deleteOne({ _id: card._id });
 
     return res.status(STATUS_SUCCESS).send({ message: CARD_DELITION_SUCCESS_MESSAGE });
-  } catch (error) {
-    return next(error);
+  } catch (err : any) {
+    if (err.name === 'CastError') {
+      const validationError = new ValidationError(VALIDATION_ERROR_MESSAGE);
+      return next(validationError);
+    }
+    return next(err);
   }
 };
 export const likeCard = modifyCardLikes('$addToSet');
